@@ -8,7 +8,6 @@
 import Config
 
 config :fuelex,
-  ecto_repos: [Fuelex.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint

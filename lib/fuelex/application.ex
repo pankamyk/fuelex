@@ -9,7 +9,6 @@ defmodule Fuelex.Application do
   def start(_type, _args) do
     children = [
       FuelexWeb.Telemetry,
-      Fuelex.Repo,
       {DNSCluster, query: Application.get_env(:fuelex, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Fuelex.PubSub},
       # Start a worker by calling: Fuelex.Worker.start_link(arg)
