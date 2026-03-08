@@ -15,11 +15,15 @@ defmodule FuelexWeb.HomeLive do
   def handle_event("validate_mass", %{"travel_path" => travel_params}, socket) do
     spacecraft_mass = travel_params["spacecraft_mass"]
 
-    {mass_value, _} =
+    {mass_value, is_valid_input} =
       if spacecraft_mass == "" or is_nil(spacecraft_mass) do
-        {nil, ""}
+        {nil, false}
       else
-        Integer.parse(spacecraft_mass)
+        case Integer.parse(spacecraft_mass) do
+          {mass, ""} when mass >= 0 -> {mass, true}
+          {_mass, _} -> {nil, false}
+          :error -> {nil, false}
+        end
       end
 
     current_flights = socket.assigns.form.params["flights"] || []
@@ -33,7 +37,7 @@ defmodule FuelexWeb.HomeLive do
       |> Map.put(:action, :validate)
 
     form = to_form(changeset)
-    mass_valid = valid_mass?(form)
+    mass_valid = is_valid_input && valid_mass?(form)
     total_fuel = calculate_total_fuel(form)
     {:noreply, assign(socket, form: form, mass_valid: mass_valid, total_fuel: total_fuel)}
   end
@@ -129,6 +133,9 @@ defmodule FuelexWeb.HomeLive do
 
       mass when is_integer(mass) and mass >= 0 ->
         true
+
+      mass when is_integer(mass) ->
+        false
 
       mass_string when is_binary(mass_string) ->
         case Integer.parse(mass_string) do
