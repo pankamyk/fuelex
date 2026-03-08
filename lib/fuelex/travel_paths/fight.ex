@@ -1,4 +1,4 @@
-defmodule Fuelex.Flight do
+defmodule Fuelex.TravelPaths.Flight do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -18,5 +18,15 @@ defmodule Fuelex.Flight do
     |> validate_required([:action, :planet])
     |> validate_inclusion(:action, @allowed_actions)
     |> validate_inclusion(:planet, @allowed_planets)
+    |> generate_id()
   end
+
+  defp generate_id(%{changes: %{id: _}} = changeset), do: changeset
+
+  defp generate_id(%{data: %__MODULE__{id: nil}} = changeset) do
+    changeset
+    |> put_change(:id, Ecto.UUID.generate())
+  end
+
+  defp generate_id(changeset), do: changeset
 end

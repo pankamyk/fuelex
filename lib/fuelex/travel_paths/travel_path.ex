@@ -1,8 +1,8 @@
-defmodule Fuelex.TravelPath do
+defmodule Fuelex.TravelPaths.TravelPath do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Fuelex.Flight
+  alias Fuelex.TravelPaths.Flight
 
   @primary_key false
   embedded_schema do

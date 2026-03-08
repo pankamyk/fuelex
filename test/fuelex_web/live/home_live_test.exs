@@ -86,7 +86,7 @@ defmodule FuelexWeb.HomeLiveTest do
       render_click(view, "select_planet", %{"planet" => "earth"})
 
       # Add Moon as destination (previous was launch, so only adds land)
-      html = render_click(view, "add_destination", %{"planet" => "moon"})
+      html = render_click(view, "select_planet", %{"planet" => "moon"})
 
       # Should now have: Launch Earth, Land Moon = 2 flights
       assert html =~ "Launch Earth"
@@ -102,10 +102,10 @@ defmodule FuelexWeb.HomeLiveTest do
       render_click(view, "select_planet", %{"planet" => "earth"})
 
       # Add Moon (previous was launch, adds only land)
-      render_click(view, "add_destination", %{"planet" => "moon"})
+      render_click(view, "select_planet", %{"planet" => "moon"})
 
       # Add Mars (previous was land, adds launch + land = 2 entries)
-      html = render_click(view, "add_destination", %{"planet" => "mars"})
+      html = render_click(view, "select_planet", %{"planet" => "mars"})
 
       # Should now have: Launch Earth, Land Moon, Launch Moon, Land Mars = 4 flights
       assert html =~ "Launch Earth"
@@ -122,7 +122,7 @@ defmodule FuelexWeb.HomeLiveTest do
       # Enter valid mass and add 2 destinations
       render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "28801"}})
       render_click(view, "select_planet", %{"planet" => "earth"})
-      render_click(view, "add_destination", %{"planet" => "moon"})
+      render_click(view, "select_planet", %{"planet" => "moon"})
 
       html = render(view)
 
@@ -138,7 +138,7 @@ defmodule FuelexWeb.HomeLiveTest do
       # Enter valid mass and add destination
       render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "28801"}})
       render_click(view, "select_planet", %{"planet" => "earth"})
-      html_before = render_click(view, "add_destination", %{"planet" => "moon"})
+      html_before = render_click(view, "select_planet", %{"planet" => "moon"})
 
       # Should have 3 flights before delete
       assert html_before =~ "Launch Earth"
@@ -171,8 +171,8 @@ defmodule FuelexWeb.HomeLiveTest do
 
       render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "28801"}})
       render_click(view, "select_planet", %{"planet" => "earth"})
-      render_click(view, "add_destination", %{"planet" => "moon"})
-      render_click(view, "add_destination", %{"planet" => "earth"})
+      render_click(view, "select_planet", %{"planet" => "moon"})
+      render_click(view, "select_planet", %{"planet" => "earth"})
 
       html = render(view)
 
@@ -189,8 +189,8 @@ defmodule FuelexWeb.HomeLiveTest do
 
       render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "14606"}})
       render_click(view, "select_planet", %{"planet" => "earth"})
-      render_click(view, "add_destination", %{"planet" => "mars"})
-      render_click(view, "add_destination", %{"planet" => "earth"})
+      render_click(view, "select_planet", %{"planet" => "mars"})
+      render_click(view, "select_planet", %{"planet" => "earth"})
 
       html = render(view)
 
@@ -207,9 +207,9 @@ defmodule FuelexWeb.HomeLiveTest do
 
       render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "75432"}})
       render_click(view, "select_planet", %{"planet" => "earth"})
-      render_click(view, "add_destination", %{"planet" => "moon"})
-      render_click(view, "add_destination", %{"planet" => "mars"})
-      render_click(view, "add_destination", %{"planet" => "earth"})
+      render_click(view, "select_planet", %{"planet" => "moon"})
+      render_click(view, "select_planet", %{"planet" => "mars"})
+      render_click(view, "select_planet", %{"planet" => "earth"})
 
       html = render(view)
 
