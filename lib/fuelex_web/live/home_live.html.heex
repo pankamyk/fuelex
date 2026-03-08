@@ -1,0 +1,135 @@
+<Layouts.app flash={@flash}>
+  <div class="flex justify-center items-center min-h-[50vh]">
+    <div class="card bg-base-200 shadow-xl max-w-md w-full">
+      <div class="card-body">
+        <h1 class="card-title text-2xl font-bold justify-center mb-4">
+          Fuelex
+        </h1>
+
+        <.form for={@form} phx-change="validate_mass" id="mass-form">
+          <.input
+            field={@form[:spacecraft_mass]}
+            type="number"
+            label="Spacecraft Mass (kg)"
+            placeholder="Enter mass in kg"
+            min="0"
+          />
+        </.form>
+
+        <div class="divider"></div>
+
+        <h2 class="text-lg font-semibold mb-2">Select Destination</h2>
+
+        <div
+          :if={length(@form.params["flights"] || []) == 0 && @mass_valid}
+          class="flex flex-wrap gap-2 mb-4"
+        >
+          <button
+            type="button"
+            class="btn btn-outline btn-primary"
+            phx-click="select_planet"
+            phx-value-planet="earth"
+          >
+            Launch from Earth
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-secondary"
+            phx-click="select_planet"
+            phx-value-planet="moon"
+          >
+            Launch from Moon
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-accent"
+            phx-click="select_planet"
+            phx-value-planet="mars"
+          >
+            Launch from Mars
+          </button>
+        </div>
+
+        <div :if={length(@form.params["flights"] || []) == 0 && !@mass_valid} class="mb-4">
+          <p class="text-sm text-base-content/60 italic">
+            Enter a valid spacecraft mass to select destination
+          </p>
+        </div>
+
+        <div :if={length(@form.params["flights"] || []) > 0} class="mt-4">
+          <h3 class="text-md font-semibold mb-2">Flight Path</h3>
+          <ul class="flex flex-col gap-2">
+            <li
+              :for={{flight, index} <- Enum.with_index(@form.params["flights"])}
+              class="flex items-center justify-between gap-2"
+            >
+              <div class="flex items-center gap-2">
+                <span :if={flight["action"] == :launch} class="text-2xl">🚀</span>
+                <span :if={flight["action"] == :land} class="text-2xl">🛬</span>
+                <span class="font-medium">
+                  {flight["action"] |> Atom.to_string() |> String.capitalize()} {flight["planet"]
+                  |> Atom.to_string()
+                  |> String.capitalize()}
+                </span>
+              </div>
+              <button
+                :if={index == length(@form.params["flights"]) - 1}
+                type="button"
+                class="btn btn-ghost btn-xs"
+                phx-click="remove_flight"
+                phx-value-id={flight["id"]}
+              >
+                <span class="text-error">✕</span>
+              </button>
+            </li>
+          </ul>
+
+          <div class="divider"></div>
+
+          <h3 class="text-md font-semibold mb-2">Add Destination</h3>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="btn btn-outline btn-primary btn-sm"
+              phx-click="add_destination"
+              phx-value-planet="earth"
+              disabled={!@mass_valid}
+            >
+              Earth
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline btn-secondary btn-sm"
+              phx-click="add_destination"
+              phx-value-planet="moon"
+              disabled={!@mass_valid}
+            >
+              Moon
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline btn-accent btn-sm"
+              phx-click="add_destination"
+              phx-value-planet="mars"
+              disabled={!@mass_valid}
+            >
+              Mars
+            </button>
+          </div>
+        </div>
+
+        <div class="card bg-base-300 mt-6">
+          <div class="card-body items-center text-center">
+            <h2 class="card-title">Total Fuel Required</h2>
+            <p :if={@total_fuel == nil} class="text-base-content/60">
+              Enter spacecraft mass and add destinations to calculate fuel
+            </p>
+            <p :if={@total_fuel} class="text-4xl font-bold text-primary">
+              {@total_fuel} kg
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layouts.app>
