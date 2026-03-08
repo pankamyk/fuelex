@@ -1,52 +1,50 @@
 defmodule FuelexWeb.HomeLive do
   use FuelexWeb, :live_view
 
-  alias Fuelex.TravelPath
+  alias Fuelex.Flight
   alias Fuelex.FuelCalculator
+  alias Fuelex.TravelPath
 
   @impl true
   def mount(_params, _session, socket) do
-    changeset = TravelPath.changeset(%{spacecraft_mass: nil, flights: []})
-    form = to_form(changeset)
-    {:ok, assign(socket, form: form, mass_valid: false, total_fuel: nil)}
+    path = %TravelPath{}
+    changeset = TravelPath.changeset(%{})
+
+    {:ok,
+     socket
+     |> assign(:travel_path, path)
+     |> assign(:form, to_form(changeset))
+     |> assign(:mass_valid, false)
+     |> assign(:total_fuel, nil)}
   end
 
   @impl true
   def handle_event("validate_mass", %{"travel_path" => travel_params}, socket) do
-    spacecraft_mass = travel_params["spacecraft_mass"]
-
-    {mass_value, is_valid_input} =
-      if spacecraft_mass == "" or is_nil(spacecraft_mass) do
-        {nil, false}
-      else
-        case Integer.parse(spacecraft_mass) do
-          {mass, ""} when mass >= 0 -> {mass, true}
-          {_mass, _} -> {nil, false}
-          :error -> {nil, false}
-        end
-      end
-
-    current_flights = socket.assigns.form.params["flights"] || []
-
     changeset =
-      if is_nil(mass_value) do
-        TravelPath.changeset(%{flights: current_flights})
-      else
-        TravelPath.changeset(%{spacecraft_mass: mass_value, flights: current_flights})
-      end
+      socket.assigns.travel_path
+      |> TravelPath.changeset(travel_params)
       |> Map.put(:action, :validate)
 
-    form = to_form(changeset)
-    mass_valid = is_valid_input && valid_mass?(form)
-    total_fuel = calculate_total_fuel(form)
-    {:noreply, assign(socket, form: form, mass_valid: mass_valid, total_fuel: total_fuel)}
+    travel_path =
+      case changeset.valid? do
+        true -> Ecto.Changeset.apply_changes(changeset)
+        false -> socket.assigns.travel_path
+      end
+
+    total_fuel = calculate_total_fuel(changeset)
+
+    {:noreply,
+     socket
+     |> assign(:travel_path, travel_path)
+     |> assign(:form, to_form(changeset))
+     |> assign(:mass_valid, changeset.valid?)
+     |> assign(:total_fuel, total_fuel)}
   end
 
   @impl true
   def handle_event("select_planet", %{"planet" => planet_string}, socket) do
     planet = String.to_atom(planet_string)
-    current_flights = socket.assigns.form.params["flights"] || []
-    current_mass = socket.assigns.form.params["spacecraft_mass"]
+    travel_path = socket.assigns.travel_path
 
     new_flight = %{
       "id" => Ecto.UUID.generate(),
@@ -54,107 +52,93 @@ defmodule FuelexWeb.HomeLive do
       "planet" => planet
     }
 
-    updated_flights = current_flights ++ [new_flight]
+    updated_flights = travel_path.flights ++ [new_flight]
+    changeset = TravelPath.changeset(travel_path, %{flights: updated_flights})
+    travel_path = Ecto.Changeset.apply_changes(changeset)
+    total_fuel = calculate_total_fuel(changeset)
 
-    changeset = TravelPath.changeset(%{spacecraft_mass: current_mass, flights: updated_flights})
-    form = to_form(changeset)
-    mass_valid = valid_mass?(form)
-    total_fuel = calculate_total_fuel(form)
-
-    {:noreply, assign(socket, form: form, mass_valid: mass_valid, total_fuel: total_fuel)}
+    {:noreply,
+     socket
+     |> assign(:travel_path, travel_path)
+     |> assign(:form, to_form(changeset))
+     |> assign(:mass_valid, changeset.valid?)
+     |> assign(:total_fuel, total_fuel)}
   end
 
   @impl true
   def handle_event("add_destination", %{"planet" => planet_string}, socket) do
-    current_flights = socket.assigns.form.params["flights"] || []
-    current_mass = socket.assigns.form.params["spacecraft_mass"]
     new_planet = String.to_atom(planet_string)
-
-    previous_flight = List.last(current_flights)
+    travel_path = socket.assigns.travel_path
+    previous_flight = List.last(travel_path.flights)
 
     new_flights =
-      case previous_flight["action"] do
+      case previous_flight.action do
         :launch ->
           [
-            %{
-              "id" => Ecto.UUID.generate(),
-              "action" => :land,
-              "planet" => new_planet
+            %Flight{
+              id: Ecto.UUID.generate(),
+              action: :land,
+              planet: new_planet
             }
           ]
 
         :land ->
           [
-            %{
-              "id" => Ecto.UUID.generate(),
-              "action" => :launch,
-              "planet" => previous_flight["planet"]
+            %Flight{
+              id: Ecto.UUID.generate(),
+              action: :launch,
+              planet: previous_flight.planet
             },
-            %{
-              "id" => Ecto.UUID.generate(),
-              "action" => :land,
-              "planet" => new_planet
+            %Flight{
+              id: Ecto.UUID.generate(),
+              action: :land,
+              planet: new_planet
             }
           ]
       end
 
-    updated_flights = current_flights ++ new_flights
+    updated_flights = travel_path.flights ++ new_flights
 
-    changeset = TravelPath.changeset(%{spacecraft_mass: current_mass, flights: updated_flights})
-    form = to_form(changeset)
-    mass_valid = valid_mass?(form)
-    total_fuel = calculate_total_fuel(form)
+    travel_path = %{travel_path | flights: updated_flights}
+    changeset = TravelPath.changeset(travel_path, %{})
+    total_fuel = calculate_total_fuel(changeset)
 
-    {:noreply, assign(socket, form: form, mass_valid: mass_valid, total_fuel: total_fuel)}
+    {:noreply,
+     socket
+     |> assign(:travel_path, travel_path)
+     |> assign(:form, to_form(changeset))
+     |> assign(:mass_valid, changeset.valid?)
+     |> assign(:total_fuel, total_fuel)}
   end
 
   @impl true
   def handle_event("remove_flight", %{"id" => flight_id}, socket) do
-    current_flights = socket.assigns.form.params["flights"] || []
-    current_mass = socket.assigns.form.params["spacecraft_mass"]
+    travel_path = socket.assigns.travel_path
 
-    updated_flights = Enum.reject(current_flights, fn f -> f["id"] == flight_id end)
+    updated_flights = Enum.reject(travel_path.flights, fn f -> f.id == flight_id end)
+    travel_path = %{travel_path | flights: updated_flights}
+    changeset = TravelPath.changeset(travel_path, %{})
+    total_fuel = calculate_total_fuel(changeset)
 
-    changeset = TravelPath.changeset(%{spacecraft_mass: current_mass, flights: updated_flights})
-    form = to_form(changeset)
-    mass_valid = valid_mass?(form)
-    total_fuel = calculate_total_fuel(form)
-
-    {:noreply, assign(socket, form: form, mass_valid: mass_valid, total_fuel: total_fuel)}
+    {:noreply,
+     socket
+     |> assign(:travel_path, travel_path)
+     |> assign(:form, to_form(changeset))
+     |> assign(:mass_valid, changeset.valid?)
+     |> assign(:total_fuel, total_fuel)}
   end
 
-  defp valid_mass?(form) do
-    case form.params["spacecraft_mass"] do
-      nil ->
-        false
+  defp calculate_total_fuel(changeset) do
+    travel = Ecto.Changeset.apply_changes(changeset)
 
-      "" ->
-        false
-
-      mass when is_integer(mass) and mass >= 0 ->
-        true
-
-      mass when is_integer(mass) ->
-        false
-
-      mass_string when is_binary(mass_string) ->
-        case Integer.parse(mass_string) do
-          {mass, ""} when mass >= 0 -> true
-          _ -> false
-        end
-    end
-  end
-
-  defp calculate_total_fuel(form) do
-    flights = form.params["flights"] || []
-
-    if length(flights) == 0 do
+    if length(travel.flights) == 0 do
       nil
     else
-      path = Enum.map(flights, fn f -> {f["action"], f["planet"]} end)
-      mass = form.params["spacecraft_mass"]
+      path = Enum.map(travel.flights, fn f -> {f.action, f.planet} end)
 
-      case FuelCalculator.calculate_total_fuel(mass, path) do
+      travel.spacecraft_mass
+      |> FuelCalculator.calculate_total_fuel(path)
+      |> case do
         {:ok, total} -> total
         {:error, _} -> nil
       end

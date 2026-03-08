@@ -21,7 +21,7 @@
         <h2 class="text-lg font-semibold mb-2">Select Destination</h2>
 
         <div
-          :if={length(@form.params["flights"] || []) == 0 && @mass_valid}
+          :if={length(@travel_path.flights || []) == 0 && @mass_valid}
           class="flex flex-wrap gap-2 mb-4"
         >
           <button
@@ -50,34 +50,34 @@
           </button>
         </div>
 
-        <div :if={length(@form.params["flights"] || []) == 0 && !@mass_valid} class="mb-4">
+        <div :if={length(@travel_path.flights || []) == 0 && !@mass_valid} class="mb-4">
           <p class="text-sm text-base-content/60 italic">
             Enter a valid spacecraft mass to select destination
           </p>
         </div>
 
-        <div :if={length(@form.params["flights"] || []) > 0} class="mt-4">
+        <div :if={length(@travel_path.flights || []) > 0} class="mt-4">
           <h3 class="text-md font-semibold mb-2">Flight Path</h3>
           <ul class="flex flex-col gap-2">
             <li
-              :for={{flight, index} <- Enum.with_index(@form.params["flights"])}
+              :for={{flight, index} <- Enum.with_index(@travel_path.flights)}
               class="flex items-center justify-between gap-2"
             >
               <div class="flex items-center gap-2">
-                <span :if={flight["action"] == :launch} class="text-2xl">🚀</span>
-                <span :if={flight["action"] == :land} class="text-2xl">🛬</span>
+                <span :if={flight.action == :launch} class="text-2xl">🚀</span>
+                <span :if={flight.action == :land} class="text-2xl">🛬</span>
                 <span class="font-medium">
-                  {flight["action"] |> Atom.to_string() |> String.capitalize()} {flight["planet"]
+                  {flight.action |> Atom.to_string() |> String.capitalize()} {flight.planet
                   |> Atom.to_string()
                   |> String.capitalize()}
                 </span>
               </div>
               <button
-                :if={index == length(@form.params["flights"]) - 1}
+                :if={index == length(@travel_path.flights) - 1}
                 type="button"
                 class="btn btn-ghost btn-xs"
                 phx-click="remove_flight"
-                phx-value-id={flight["id"]}
+                phx-value-id={flight.id}
               >
                 <span class="text-error">✕</span>
               </button>
