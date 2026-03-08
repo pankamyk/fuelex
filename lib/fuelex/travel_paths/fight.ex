@@ -1,9 +1,24 @@
 defmodule Fuelex.TravelPaths.Flight do
+  @moduledoc """
+  Represents a single flight (launch or landing) in a travel path.
+
+  A flight consists of an action (launch or land) and a destination planet.
+  The id is a virtual field used for UI identification only.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
   @allowed_planets [:earth, :moon, :mars]
   @allowed_actions [:launch, :land]
+
+  @type action :: :launch | :land
+  @type planet :: :earth | :moon | :mars
+  @type t :: %__MODULE__{
+          id: String.t() | nil,
+          action: action(),
+          planet: planet()
+        }
 
   @primary_key false
   embedded_schema do
