@@ -115,31 +115,15 @@ defmodule FuelexWeb.HomeLive do
 
   def planet_selector(assigns) do
     ~H"""
-    <div :if={@mass_valid} class="flex flex-wrap gap-2 mb-4">
-      <button
-        type="button"
-        class="btn btn-outline btn-primary"
-        phx-click="select_planet"
-        phx-value-planet="earth"
-      >
-        Launch from Earth
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline btn-secondary"
-        phx-click="select_planet"
-        phx-value-planet="moon"
-      >
-        Launch from Moon
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline btn-accent"
-        phx-click="select_planet"
-        phx-value-planet="mars"
-      >
-        Launch from Mars
-      </button>
+    <div>
+      <h2 class="text-lg font-semibold mb-2">
+        Select Launch Location <span>🚀</span>
+      </h2>
+      <div :if={@mass_valid} class="flex gap-2 mb-2">
+        <.select_planet_btn planet="earth" />
+        <.select_planet_btn planet="moon" />
+        <.select_planet_btn planet="mars" />
+      </div>
     </div>
     """
   end
@@ -151,31 +135,55 @@ defmodule FuelexWeb.HomeLive do
 
   def flight_list(assigns) do
     ~H"""
-    <ul class="flex flex-col gap-2">
-      <li
-        :for={{flight, index} <- Enum.with_index(@flights)}
-        class="flex items-center justify-between gap-2"
-      >
-        <div class="flex items-center gap-2">
-          <span :if={flight.action == :launch} class="text-2xl">🚀</span>
-          <span :if={flight.action == :land} class="text-2xl">🛬</span>
-          <span class="font-medium">
-            {flight.action |> Atom.to_string() |> String.capitalize()} {flight.planet
-            |> Atom.to_string()
-            |> String.capitalize()}
-          </span>
-        </div>
-        <button
-          :if={index == length(@flights) - 1}
-          type="button"
-          class="btn btn-ghost btn-xs"
-          phx-click="remove_flight"
-          phx-value-id={flight.id}
+    <div class="mt-2">
+      <h3 class="text-md font-semibold mb-2">Flight Path</h3>
+      <ul class="flex flex-col gap-2">
+        <li
+          :for={{flight, index} <- Enum.with_index(@flights)}
+          class="flex items-center justify-between bg-slate-200/5 border-slate-200/10 border-1 py-1 px-2 rounded-sm gap-2"
         >
-          <span class="text-error">✕</span>
-        </button>
-      </li>
-    </ul>
+          <div>
+            <div class="flex items-center gap-2">
+              <span :if={flight.action == :launch} class="text-2xl">🚀</span>
+              <span :if={flight.action == :land} class="text-2xl">🛬</span>
+              <span class="font-medium text-shadow-lg">
+                {display_atom(flight.action)} {display_atom(flight.planet)}
+              </span>
+            </div>
+            <span class="text-xs text-shadow-md">{get_planet_gravity(flight.planet)} m/s²</span>
+          </div>
+          <button
+            :if={index == length(@flights) - 1}
+            type="button"
+            class="btn btn-xs btn-ghost hover:bg-slate-200/10 hover:border-slate-200/15 shadow-none"
+            phx-click="remove_flight"
+            phx-value-id={flight.id}
+          >
+            <span class="text-base-content">✕</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders planet selector button.
+  """
+  attr :planet, :string, required: true
+  attr :disabled, :boolean, default: nil
+
+  def select_planet_btn(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="btn flex-1 bg-slate-800/25 hover:bg-slate-800/35"
+      phx-click="select_planet"
+      phx-value-planet={@planet}
+      disabled={@disabled}
+    >
+      {String.capitalize(@planet)}
+    </button>
     """
   end
 
@@ -186,34 +194,16 @@ defmodule FuelexWeb.HomeLive do
 
   def destination_selector(assigns) do
     ~H"""
-    <div class="flex flex-wrap gap-2">
-      <button
-        type="button"
-        class="btn btn-outline btn-primary btn-sm"
-        phx-click="select_planet"
-        phx-value-planet="earth"
-        disabled={!@mass_valid}
-      >
-        Earth
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline btn-secondary btn-sm"
-        phx-click="select_planet"
-        phx-value-planet="moon"
-        disabled={!@mass_valid}
-      >
-        Moon
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline btn-accent btn-sm"
-        phx-click="select_planet"
-        phx-value-planet="mars"
-        disabled={!@mass_valid}
-      >
-        Mars
-      </button>
+    <div>
+      <h2 class="text-lg font-semibold mb-2">
+        Select Destination <span>🛬</span>
+      </h2>
+      <div class="flex gap-2">
+        <.select_planet_btn planet="earth" disabled={!@mass_valid} />
+        <.select_planet_btn planet="moon" disabled={!@mass_valid} />
+        <.select_planet_btn planet="mars" disabled={!@mass_valid} />
+      </div>
+      <div class="divider my-2"></div>
     </div>
     """
   end
@@ -225,17 +215,26 @@ defmodule FuelexWeb.HomeLive do
 
   def fuel_card(assigns) do
     ~H"""
-    <div class="card bg-base-300 mt-6">
+    <div class="card bg-slate-600/25 backdrop-blur-xs border-1 border-slate-600/35 shadow-xl my-6 w-100">
       <div class="card-body items-center text-center">
-        <h2 class="card-title">Total Fuel Required</h2>
-        <p :if={@total_fuel == nil} class="text-base-content/60">
-          Enter spacecraft mass and add destinations to calculate fuel
+        <h2 class="card-title text-shadow-lg text-xl">Total Fuel Required</h2>
+        <p :if={@total_fuel == nil} class="text-base-content/90 text-shadow-lg">
+          Enter spacecraft mass and add destinations to calculate fuel mass required
         </p>
-        <p :if={@total_fuel} class="text-4xl font-bold text-primary">
+        <p :if={@total_fuel} class="text-4xl font-bold text-orange-200 text-shadow-lg">
           {@total_fuel} kg
         </p>
       </div>
     </div>
     """
+  end
+
+  defp display_atom(property), do: property |> Atom.to_string() |> String.capitalize()
+
+  defp get_planet_gravity(planet) do
+    case FuelCalculator.planet_gravity(planet) do
+      {:ok, value} -> value
+      _ -> nil
+    end
   end
 end

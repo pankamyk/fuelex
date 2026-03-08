@@ -54,9 +54,9 @@ defmodule FuelexWeb.HomeLiveTest do
       html =
         render_submit(view, "validate_mass", %{"travel_path" => %{"spacecraft_mass" => "28801"}})
 
-      assert html =~ "Launch from Earth"
-      assert html =~ "Launch from Moon"
-      assert html =~ "Launch from Mars"
+      assert html =~ "Earth"
+      assert html =~ "Moon"
+      assert html =~ "Mars"
     end
   end
 

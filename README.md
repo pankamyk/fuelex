@@ -1,18 +1,46 @@
 # Fuelex
 
-To start your Phoenix server:
+A Phoenix LiveView web application that calculates fuel requirements for spacecraft interplanetary travel.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## Setup
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+```bash
+# Install dependencies
+mix setup
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+# Start the server
+mix phx.server
+```
 
-## Learn more
+Visit http://localhost:4000
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## Description
+
+Users enter their spacecraft mass and build a flight path by selecting planets. The app calculates total fuel required using realistic physics formulas that account for fuel weight itself.
+
+## Spec Overview
+
+### Core Modules
+
+| Module | Purpose |
+|--------|---------|
+| `Fuelex.FuelCalculator` | Fuel calculation engine |
+| `Fuelex.TravelPaths` | Travel path manipulation helpers |
+| `Fuelex.TravelPaths.TravelPath` | Embedded schema for travel path |
+| `Fuelex.TravelPaths.Flight` | Embedded schema for flights |
+| `FuelexWeb.HomeLive` | LiveView for the web interface |
+
+### Supported Planets
+
+| Planet | Gravity (m/s²) |
+|--------|----------------|
+| Earth | 9.807 |
+| Moon | 1.62 |
+| Mars | 3.711 |
+
+### Formulas
+
+- **Launch**: `floor(mass × gravity × 0.042 - 33)`
+- **Landing**: `floor(mass × gravity × 0.033 - 42)`
+
+The algorithm uses recursion to account for the weight of the fuel itself.

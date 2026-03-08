@@ -1,46 +1,47 @@
 <Layouts.app flash={@flash}>
   <div class="flex justify-center items-center min-h-[50vh]">
-    <div class="card bg-base-200 shadow-xl max-w-md w-full">
-      <div class="card-body">
-        <h1 class="card-title text-2xl font-bold justify-center mb-4">
-          Fuelex
-        </h1>
+    <div class="flex flex-col items-center">
+      <h1 class="text-7xl font-bold italic mb-4">
+        Fuelex 🚀
+      </h1>
 
-        <.form for={@form} phx-change="validate_mass" id="mass-form">
-          <.input
-            field={@form[:spacecraft_mass]}
-            type="number"
-            label="Spacecraft Mass (kg)"
-            placeholder="Enter mass in kg"
-            min="0"
+      <.fuel_card total_fuel={@total_fuel} />
+
+      <div class="card bg-slate-500/25 backdrop-blur-xs shadow-xl border-1 border-slate-700/25 max-w-md w-full">
+        <div class="card-body">
+          <.form for={@form} phx-change="validate_mass" id="mass-form">
+            <.input
+              field={@form[:spacecraft_mass]}
+              type="number"
+              label="Spacecraft Mass (kg)"
+              placeholder="Enter mass in kg"
+              min="0"
+              class="bg-slate-800/50 w-full input"
+            />
+          </.form>
+
+          <div class="divider mt-0 mb-1"></div>
+
+          <.planet_selector
+            :if={length(@travel_path.flights || []) == 0 && @mass_valid}
+            mass_valid={@mass_valid}
           />
-        </.form>
+          <.destination_selector
+            :if={length(@travel_path.flights || []) > 0}
+            mass_valid={@mass_valid}
+          />
 
-        <div class="divider"></div>
+          <div :if={length(@travel_path.flights || []) == 0 && !@mass_valid} class="mb-4">
+            <p class="text-sm text-base-content/60 italic">
+              Enter a valid spacecraft mass to select destination
+            </p>
+          </div>
 
-        <h2 class="text-lg font-semibold mb-2">Select Destination</h2>
-
-        <div :if={length(@travel_path.flights || []) == 0 && @mass_valid} class="mb-4">
-          <.planet_selector mass_valid={@mass_valid} />
+          <.flight_list
+            :if={length(@travel_path.flights || []) > 0}
+            flights={@travel_path.flights}
+          />
         </div>
-
-        <div :if={length(@travel_path.flights || []) == 0 && !@mass_valid} class="mb-4">
-          <p class="text-sm text-base-content/60 italic">
-            Enter a valid spacecraft mass to select destination
-          </p>
-        </div>
-
-        <div :if={length(@travel_path.flights || []) > 0} class="mt-4">
-          <h3 class="text-md font-semibold mb-2">Flight Path</h3>
-          <.flight_list flights={@travel_path.flights} />
-
-          <div class="divider"></div>
-
-          <h3 class="text-md font-semibold mb-2">Add Destination</h3>
-          <.destination_selector mass_valid={@mass_valid} />
-        </div>
-
-        <.fuel_card total_fuel={@total_fuel} />
       </div>
     </div>
   </div>
