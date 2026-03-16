@@ -55,8 +55,8 @@ defmodule Fuelex.FuelCalculator do
       iex> Fuelex.FuelCalculator.valid_planets()
       [:earth, :mars, :moon]
   """
-  @spec valid_planets() :: [:earth | :mars | :moon]
-  def valid_planets, do: [:earth, :mars, :moon]
+  @spec valid_planets() :: [atom()]
+  def valid_planets, do: Map.keys(@planets)
 
   @doc """
   Returns the gravity for a given planet.
